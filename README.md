@@ -3,7 +3,7 @@
 
 These packages alow us to perfrom certain tasks on OHmnibot:
 
-## *Prequisite setting:*
+## *Prerequisite setting:*
 
 **Clone the *ohmni_amcl* inside the local machine and build with catkin_make**
 
