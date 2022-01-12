@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  body{
+    background-color: #AEC6CF;
+    text-align: center;
+    font-family:Arial, Helvetica, sans-serif;
+    color:white;
+  }
+  #status{
+    font-style: italic;
+    font-size:20px;
+  }
+#header{
+  margin: auto;
+  position: relative;
+
+}
+#container{
+  margin: auto; 
+}
+#roomA {
+  align-items: center;
+  background-image: radial-gradient(100% 100% at 100% 0, #5adaff 0, #5468ff 100%);
+  border-radius: 6px;
+  box-shadow: rgba(45, 35, 66, .4) 0 2px 4px,rgba(45, 35, 66, .3) 0 7px 13px -3px,rgba(58, 65, 111, .5) 0 -3px 0 inset;
+  box-sizing: border-box;
+  color: black;
+  font-weight: 900;
+  cursor: pointer;
+  height: 60px;
+  width:120px;
+  position: relative;
+  transition: box-shadow .15s,transform .15s;
+  font-size: 18px;
+}
+#roomA:focus {
+  box-shadow: #3c4fe0 0 0 0 1.5px inset, rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+}
+#roomA:hover {
+  box-shadow: rgba(45, 35, 66, .4) 0 4px 8px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+  transform: translateY(-2px);
+}
+
+#roomA:active {
+  box-shadow: #3c4fe0 0 3px 7px inset;
+  transform: translateY(2px);
+}
+#roomB {
+  align-items: center;
+  background-image: radial-gradient(100% 100% at 100% 0, #5adaff 0, #5468ff 100%);
+  border-radius: 6px;
+  box-shadow: rgba(45, 35, 66, .4) 0 2px 4px,rgba(45, 35, 66, .3) 0 7px 13px -3px,rgba(58, 65, 111, .5) 0 -3px 0 inset;
+  box-sizing: border-box;
+  color: black;
+  font-weight: 900;
+  cursor: pointer;
+  height: 60px;
+  width: 120px;
+  position: relative;
+  transition: box-shadow .15s,transform .15s;
+  font-size: 18px;
+}
+#roomB:focus {
+  box-shadow: #3c4fe0 0 0 0 1.5px inset, rgba(45, 35, 66, .4) 0 2px 4px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+}
+#roomB:hover {
+  box-shadow: rgba(45, 35, 66, .4) 0 4px 8px, rgba(45, 35, 66, .3) 0 7px 13px -3px, #3c4fe0 0 -3px 0 inset;
+  transform: translateY(-2px);
+}
+
+#roomB:active {
+  box-shadow: #3c4fe0 0 3px 7px inset;
+  transform: translateY(2px);
+}
+#temp {
+  font-size:25px;
+  font-weight: bold;
+}
+#spo2 {
+  font-size:25px;
+  font-weight: bold;
+}
+
+
+</style>
+<script type="text/javascript" src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+
+<script type="text/javascript" type="text/javascript">
+  var ros = new ROSLIB.Ros({
+    url : 'ws://localhost:9090'
+  });
+  //Including the roslibjs scripts in order to communicate with ROS topics.
+  //Create rosbridge node to connect the server to ROS master.
+  ros.on('connection', function() {
+    document.getElementById("status").innerHTML = "Connected";
+  });
+
+  ros.on('error', function(error) {
+    document.getElementById("status").innerHTML = "Error";
+  });
+
+  ros.on('close', function() {
+    document.getElementById("status").innerHTML = "Closed";
+  });
+
+//Published node to velocity topic
+//Topic name could be replaced with "tb_cmd_vel" or "/cmd_vel_accel"
+  var cmd_vel_talker = new ROSLIB.Topic({
+    ros : ros,
+    name : "/cmd_vel_accel",
+    messageType : 'geometry_msgs/Twist'
+  });
+
+//Publish desire twist message into the velocity topic
+  move = function (linear, angular) {
+    var twist = new ROSLIB.Message({
+      linear: {
+        x: linear,
+        y: 0,
+        z: 0,
+      },
+      angular: {
+        x: 0,
+        y: 0,
+        z: angular
+      }
+    });
+    cmd_vel_talker.publish(twist);
+  }
+
+  var Straight, Stop, room;
+
+//Function for navigation to desire destinations.
+//Using setTimeout and setInterval to publish constant twist message
+//since the roslibjs limited to only 1Hz published message at a time.  
+  function Turn_counterclockwise_A(){
+    setTimeout(function(){ move(0,0.5); }, 5010);
+    setTimeout(function(){ move(0,0.5); }, 6020);
+    setTimeout(function(){ move(0,0.5708); }, 7030);
+  }
+
+  function Turn_counterclockwise_B(){
+    move(0,0.5);
+    setTimeout(function(){ move(0,0.5); }, 1010);
+    setTimeout(function(){ move(0,0.5708); }, 2020);
+  }
+
+  function Return_base(){
+    setTimeout(function(){ move(0,0.5); }, 8010);
+    setTimeout(function(){ move(0,0.5); }, 9020);
+    setTimeout(function(){ move(0,0.5); }, 10030);
+    setTimeout(function(){ move(0,0.5); }, 11040);
+    setTimeout(function(){ move(0,0.5708); }, 12050);
+    setTimeout(function(){ move(0,0.5708); }, 13060);
+  }
+
+  function stop(){
+    clearInterval(Straight);
+  }
+
+  function go_straight(){
+    Straight = setInterval(function(){ move(0.5,0); }, 500);
+  }
+
+  function roomB(){
+    go_straight();
+    Stop = setTimeout(stop, 5000);
+    Turn_counterclockwise_A();
+  }
+
+  function roomA(){
+    Turn_counterclockwise_B();
+    setTimeout(function(){go_straight();}, 4000);
+    Stop = setTimeout(stop, 8000);
+    Return_base();
+  }
+
+  var temp_listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/sensor1',
+    messageType : 'std_msgs/Float64'
+  });
+
+  temp_listener.subscribe(function(m) {
+    document.getElementById("msg1").innerHTML = m.data;
+  });
+
+  var heart_listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/sensor2',
+    messageType : 'std_msgs/Float64'
+  });
+
+  heart_listener.subscribe(function(m) {
+    document.getElementById("msg2").innerHTML = m.data;
+  });
+
+</script>
+</head>
+
+<body>
+  <div class="container">
+    <h1 id="header">Simple Ohmnibot Interface</h1>
+    <p id="status">Connection status: <span id="status"></span></p>
+    <button id="roomA" type="button" onclick="roomA()">Room A</button>
+    <button id="roomB" type="button" onclick="roomB()">Room B</button>
+    <p id="temp"> Current temperature: <span id="msg1"></span></p>
+    <p id="spo2"> Current spO2: <span id="msg2"></span></p>
+  </div>
+  
+</body>
+</html>
